@@ -1,0 +1,43 @@
+#jinja2:lstrip_blocks: True
+{{ ansible_managed | comment }}
+
+bootstrap.memory_lock: false
+cluster.initial_master_nodes:
+{{ groups['elastic_hot'] | to_nice_yaml( width=50) }}
+cluster.name: {{ elasticsearch_cluster_name }}
+cluster.routing.allocation.enable: all
+discovery.seed_hosts:
+{{ groups['elastic_hot'] | to_nice_yaml( width=50) }}
+gateway.recover_after_time: 1m
+gateway.expected_data_nodes: 5
+network.bind_host: 0.0.0.0
+network.host: 0.0.0.0
+node.name: {{ inventory_hostname }}
+thread_pool.search.queue_size: 8000
+thread_pool.search_throttled.queue_size: 1000
+thread_pool.write.queue_size: 8000
+transport.host : 0.0.0.0
+xpack.security.audit.enabled: true
+xpack.security.enabled: true
+xpack.security.transport.ssl.enabled: true
+xpack.security.transport.ssl.certificate_authorities: {{ elasticsearch_ca_location }}
+xpack.security.transport.ssl.keystore.path: {{ elasticsearch_certificate_location }}
+#xpack.security.transport.ssl.truststore.path: {{ elasticsearch_certificate_location }}
+xpack.security.transport.ssl.verification_mode: certificate
+node.attr.indexing_enabled: true
+{% if inventory_hostname is search('warm') %}
+node.attr.data: warm
+{% else %}
+node.attr.data: hot
+{% endif %}
+#################################### Paths ####################################
+
+# Path to directory containing configuration (this file and logging.yml):
+
+
+path.data: {{ elasticsearch_data_directory }}
+
+path.logs: {{ elasticsearch_log_directory }}
+
+
+action.auto_create_index: true

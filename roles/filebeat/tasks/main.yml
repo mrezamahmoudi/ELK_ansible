@@ -1,0 +1,58 @@
+---
+- name: Download Filebeat {{ filebeat_version }} package
+  get_url:
+    url: "https://artifacts.elastic.co/downloads/beats/filebeat/filebeat-{{ filebeat_version }}-amd64.deb"
+    dest: "/tmp/filebeat-{{ filebeat_version }}-amd64.deb"
+    url_username: '{{ username_registry }}'
+    url_password: '{{ password_registry }}'
+  register: download_filebeat_deb_package
+  until: download_filebeat_deb_package is succeeded
+  retries: 5
+  delay: 2
+  tags:
+    - download_filebeat
+
+- name: Stop filbeat
+  systemd:
+    name: "filebeat.service"
+    state: stopped
+
+- name: Disable filebeat
+  systemd:
+    name: "filebeat.service"
+    enabled: false
+
+- name: Install filebeat package
+  ansible.builtin.apt:
+    deb: /tmp/filebeat-{{ filebeat_version }}-amd64.deb
+  notify: restart {{ filebeat_unit_name }}
+
+- name: "Creating Filebeat directories"
+  file:
+    state: directory
+    mode: "0644"
+    path: "{{ item }}"
+  with_items:
+    - /etc/{{ filebeat_unit_name }}
+    - /var/log/{{ filebeat_unit_name }}
+    - /var/lib/{{ filebeat_unit_name }}
+
+- name: "Creating Filebeat configuration file"
+  template:
+    src: filebeat.yml.j2
+    dest: /etc/{{ filebeat_unit_name }}/filebeat.yml
+    mode: "0644"
+  notify: restart {{ filebeat_unit_name }}
+  tags:
+    - update_filebeat_config
+
+- name: Generating Filebeat Systemd unit
+  template:
+    src: filebeat.service.j2
+    dest: /etc/systemd/system/{{ filebeat_unit_name }}.service
+    owner: root
+    group: root
+    mode: "0644"
+  notify: restart {{ filebeat_unit_name }}
+  tags:
+    - update_filebeat_unit_name_systemd_unit

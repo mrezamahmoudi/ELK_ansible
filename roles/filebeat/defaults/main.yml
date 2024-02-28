@@ -1,0 +1,4 @@
+---
+filebeat_version: 8.9.0
+
+filebeat_unit_name: filebeat

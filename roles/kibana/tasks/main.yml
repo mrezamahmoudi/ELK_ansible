@@ -1,0 +1,78 @@
+---
+- name: Creating {{ kibana_group }} system group
+  group:
+    name: "{{ kibana_group }}"
+    system: true
+    state: present
+  when: kibana_group != 'root'
+
+- name: Creating {{ kibana_user }} system user
+  user:
+    name: '{{ kibana_user }}'
+    system: true
+    shell: "/usr/sbin/nologin"
+    group: '{{ kibana_group }}'
+    createhome: false
+  when: kibana_user != 'root'
+
+- name: Configure OpenJDK Java repository
+  apt_repository:
+    repo: ppa:openjdk-r/ppa
+    state: present
+    update_cache: true
+    validate_certs: false
+
+- name: Install Java
+  apt:
+    name: openjdk-12-jdk
+    state: present
+    update_cache: true
+  environment:
+    - http_proxy: '{{ http_proxy }}'
+    - https_proxy: '{{ http_proxy }}'
+
+- name: Add kibana apt key
+  ansible.builtin.apt_key:
+    url: "{{ kibana_apt_key }}"
+    state: present
+
+- name: Add kibana repository
+  ansible.builtin.apt_repository:
+    repo: "{{ kibana_repository }}"
+    state: present
+
+- name: Stop kibana service
+  ansible.builtin.systemd:
+    name: kibana.service
+    state: stopped
+  tags: [never, stop_kibana]
+
+- name: Install kibana {{ kibana_version }}
+  ansible.builtin.apt:
+    name: kibana={{ kibana_version }}
+    state: present
+    update_cache: true
+  tags: [install_kibana]
+
+- name: Ensure Kibana is started and enabled at boot.
+  service:
+    name: kibana
+    state: "{{ kibana_service_state }}"
+    enabled: "{{ kibana_service_enabled }}"
+
+- name: create config directory
+  file:
+    path: /etc/kibana
+    mode: "0750"
+    state: directory
+
+- name: Copy Kibana configuration.
+  template:
+    src: "{{ kibana_config_template }}"
+    dest: "{{ kibana_config_file_path }}"
+    owner: root
+    group: root
+    mode: "0644"
+  notify: restart kibana
+  tags:
+    - update_kibana_config

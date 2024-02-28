@@ -1,0 +1,7 @@
+elasticsearch_version: 8.11.3
+elasticsearch_cluster_name: snapp-cluster
+elasticsearch_data_directory: /opt/elasticsearch/data
+elasticsearch_log_directory: /opt/elasticsearch/logs
+elasticsearch_certificate_location: /etc/elasticsearch/elastic-certificates.p12
+elasticsearch_ca_location: /etc/elasticsearch/elastic-old-ca.pem
+elasticsearch_node_type: hot

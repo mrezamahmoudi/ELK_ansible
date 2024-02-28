@@ -1,0 +1,11 @@
+server.port: '{{ kibana_server_port }}'
+server.host: "{{ kibana_server_host }}"
+server.maxPayloadBytes: 2048576
+elasticsearch.hosts: {{ kibana_elasticsearch_url }}
+elasticsearch.username: "{{ kibana_elasticsearch_username }}"
+elasticsearch.password: "{{ kibana_elasticsearch_password }}"
+xpack.reporting.csv.maxSizeBytes: 104857600
+xpack.reporting.queue.timeout: 999999
+xpack.security.session.idleTimeout: "8h"
+xpack.security.session.lifespan: "30d"
+xpack.encryptedSavedObjects.encryptionKey: 'CHANGEME'

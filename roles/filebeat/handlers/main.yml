@@ -1,0 +1,7 @@
+---
+- name: restart {{ filebeat_unit_name }}
+  systemd:
+    name: '{{ filebeat_unit_name }}'
+    state: restarted
+    enabled: true
+    daemon_reload: true
